@@ -131,6 +131,8 @@ done
 
 #main loop
 
+DIALOG_RET=0 # the return value of dialog
+
 while [ 1 -eq 1 ]; do
 
 
@@ -162,8 +164,10 @@ while [ 1 -eq 1 ]; do
 		"${TEMP_FILE_LIST[@]}" \
 		3>&1 1>&2 2>&3) 
 
+	DIALOG_RET=$?
+	
 	#the cancel button
-	if [ $? -eq 1 ];then
+	if [ $DIALOG_RET -eq 1 ];then
 		clear
 		break
 	fi
@@ -174,8 +178,10 @@ while [ 1 -eq 1 ]; do
 	    kill "$bg_pid"
 #	    wait "$bg_pid" 2>/dev/null
 	fi
+
+	
 	#suffle feature
-	if [ $? -eq 3 ]; then
+	if [ $DIALOG_RET -eq 3 ]; then
 
 		rng 0 $FILE_COUNT
 
