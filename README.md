@@ -17,7 +17,11 @@ a simple free and open source music player for linux and termux.
 
 ### direct running
 as FFplay is a bash script application it can be ran from any terminal (as long as the dependencies are installed).
-to do so use **"bash"**, ***not "sh" as it does not support the features used by FFplay!***\
+
+> [!IMPORTANT]
+>use **"bash"** **not "sh"** 
+>as **it does not support the features used by FFplay!**
+
 run:
 ```
 git clone https://github.com/Felipeshaolin/FFplay.git
