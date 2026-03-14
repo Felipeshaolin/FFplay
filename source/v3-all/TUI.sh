@@ -2,35 +2,65 @@
 
 #https://tintin.mudhalla.net/info/xterm/
 
-##defaults
-#input
+############
+# defaults #
+############
+
+###fucntion pid's
+pids=()
+
+###colors
+
+
+
+
+###input
+
 scrollup=0
 scrolldown=0
+#mouse coordinates
 clickx=0
 clicky=0
-#terminal
-termsizex=0
-termsizey=0
-#menu
+
+###terminal
+
+#ṭerminal size
+termsizex=30
+termsizey=30
+
+###menu
+
+#currently chosen items
+itemoffset=0 
+#padding for bottom buttons
+bottompadding=3
+#available size for text
 sizefortext=26
+#available size for items
 availableslots=3
+#top line of TUI
 topline="╭──────────FFplay──────────╮"
+#bottom line of TUI
 bottomline="╰──────────────────────────╯"
+#an array with all the item's names in it
 declare -a itemtable;
+#current items on display
 declare -a curritems;
 
+#############
+# functions #
+#############
 
-##functions
-
-#main
+###main
 function main_tui(){
 	while true;do
 		::
+
 	done
 }
 
 
-#helper
+###helper 
 
 #updates the terminal size variables
 function gettermsize(){
@@ -67,20 +97,23 @@ function printbottomline(){
 		bottomline+="─"
 	done
 	bottomline+="╯"
-	echo -e $bottomline
+	echo -en $bottomline
 }
 
 #gets the available area for text
 function getusabletextarea(){
-	sizefortext=$((termsizex - 2))
-	availableslots=$((termsizey-2))
+	sizefortext=$((termsizex - bottompadding))
+	availableslots=$((termsizey - 3))
+	#echo "sizefortext=" $sizefortext
+	#echo "available=" $availableslots
+
 }
 
 #prints an tiem to the menu
 function printitem(){
 
-	if [ $availableslots -eq 0 ];then
-		exit 1
+	if [ $availableslots -le 0 ];then
+		exit 0
 	fi
 	
 	local item="$1"
@@ -100,13 +133,14 @@ function printitem(){
 
 	echo -en "┃"
 	echo -en "$item"
-	echo -en "┃"
+	echo -e "┃"
 }
 
 #prints the whole menu section
 function printmenu(){
 
 	curritems=()
+	
 
 	if [ $availableslots -lt ${#itemtable[@]} ];then
 		for (( i=0; i<availableslots; i++ ));do
@@ -115,10 +149,13 @@ function printmenu(){
 		done		
 	else
 		for item in "${itemtable[@]}";do
-			availableslots=$(( availableslots -	${#itemtable[@]} ))
+			#echo "ici2" ${#itemtable[@]} ">" $availableslots
+			availableslots=$(( availableslots -	1 ))
 			curritems+=("$item")
 		done
 	fi
+
+	#echo "${#itemtable[@]}"
 
 	for item in "${curritems[@]}";do
 		printitem "$item"
@@ -130,7 +167,7 @@ function printmenu(){
 
 }
 
-##input
+###input
 
 # pids=()
 # program1 & pids+=($!)
@@ -151,20 +188,17 @@ function printmenu(){
 # and scrolls
 function inputupdate(){
 
-	echo -e '\e[?1000h'  # basic mouse tracking
-	echo -e '\e[?1006h'  # enable SGR extended mode (easier coordinates)
-	while true;do
-	IFS= read -rsn1 first  # read first byte
+	(echo -en '\e[?1000h')  # basic mouse tracking
+	(echo -en '\e[?1006h')  # enable SGR extended mode (easier coordinates)
+	IFS= read -rsn1 -t 0.01 first  # read first byte
 	if [[ $first == $'\e' ]]; then
-	    read -rsn2 rest
-	    read -rsn20 seq   # read remaining bytes (adjust length if needed)
+	    read -rsn2 -t 0.01  rest
+	    read -rsn20 -t 0.01 seq   # read remaining bytes (adjust length if needed)
 	    local full_seq="$first$rest$seq"
 		local k 
-	    k=$(printf '%q\n' "$full_seq")
-	    inputupdatehelper "$k"
-	    #echo $k
+	    k=$(printf '%q\n' "$full_seq") 
+	    inputupdatehelper "$k" 
 	fi
-	done
 	
 }
 function inputupdatehelper(){
@@ -192,33 +226,45 @@ function inputupdatehelper(){
 					clickx=${coords%;*}
 					clicky=${coords#*;}
 
+
 		else
 	
-			#echo $prompt
-			::
+			scrollup=0
+			scrolldown=0
 	 	 			
 	 	fi
 	
 }
 
+
+
+itemtable=("smells like teen spirit" "come as you are" "buddy holly" "lon poka mi" "7/8" "jojo op 3")
+echo -en "\e[?25l"
+
 #test
 while true;do
 
-	clear
+	tput home
 
-	itemtable=("dance like jagger" "lon poka mi" "plastic beach")
-	
 	#update values
 	gettermsize
 	getusabletextarea
+	inputupdate
 
+	#prints menu
 	printtopline
 	printmenu
 	printbottomline
 
-	echo "availableslots="$availableslots
+	if [ "$clickx" -eq 1 ] && [ "$clicky" -eq 1 ];then
+		echo -en '\e[?1006l'  # disable SGR extended mode
+		echo -en '\e[?1000l'  # disable basic mouse tracking
+		#clear
+		#reset
+		break
+	fi
 
 	#jan pi tomo suli li wile moku. ona li lukin e waso lon sewi. waso li toki: 'sina wile moku anu seme?' jan li toki: 'mi wile moku.' waso li awen, li pana e kili. jan li pona."
-	sleep 0.6
 	
 done
+
