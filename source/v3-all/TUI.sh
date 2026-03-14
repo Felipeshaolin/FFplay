@@ -6,13 +6,35 @@
 # defaults #
 ############
 
+###colors
+#modify as you wish
+
+#default color values
+red="\e[31m"
+blue="\e[34m"
+green="\e[32m"
+violet="\e[345m"
+yellow="\e[33m"
+black="\e[30m"
+white="\e[37m"
+whiteblackbackground="\e[30m\e[47m"
+stopcolor="\e[0m"
+
+#borders
+borderscolor=$blue
+bottombarcolor=$borderscolor
+topbarcolor=$borderscolor
+leftbarcolor=$borderscolor
+rightbarcolor=$borderscolor
+logocolor=$green
+
+#items
+selecteditemcolor=$whiteblackbackground
+itemcolor=$white
+emptyitemcolor=$black
+
 ###fucntion pid's
 pids=()
-
-###colors
-
-
-
 
 ###input
 
@@ -31,7 +53,7 @@ termsizey=30
 ###menu
 
 #currently chosen items
-itemoffset=0 
+itemoffset=3
 #padding for bottom buttons
 bottompadding=3
 #available size for text
@@ -70,34 +92,36 @@ function gettermsize(){
 
 	if [[ $termsizex -le 8 && $termsizey -le 4 ]];then
 		#your term is too small
-		echo "terminal size too small"
+		echo "${red}terminal size too small${stopcolor}"
 		sleep 4
 	fi	
 }
 
 #creates the top line
 function printtopline(){
-	topline="╭"
+	topline="${red}X${stopcolor}"
+	#topline="╭"
+	topline+=$topbarcolor
 	for (( i = 0; i < $(( termsizex/2 - 4 )); i++ ))do
 		topline+="─"
 	done	
-	topline+="FFplay"
+	topline+="${stopcolor}${logocolor}FFplay${topbarcolor}"
 	for (( i = 0; i < $(( termsizex/2 - 4 )); i++ ))do
 			topline+="─"
 	done
-	topline+="╮"
+	topline+="╮${stopcolor}"
 
-	echo -e $topline
+	echo -e "$topline"
 }
 
 #creates the top line
 function printbottomline(){
-	bottomline="╰"
+	bottomline="${bottombarcolor}╰"
 	for (( i = 0; i < $(( termsizex - 2 )); i++ ))do
 		bottomline+="─"
 	done
-	bottomline+="╯"
-	echo -en $bottomline
+	bottomline+="╯${stopcolor}"
+	echo -en "$bottomline"
 }
 
 #gets the available area for text
@@ -119,21 +143,21 @@ function printitem(){
 	local item="$1"
 
 	if [ ${#1} -gt $sizefortext ];then
-		item=${item:0:${sizefortext}}
+		item="${itemcolor}${item:0:${sizefortext}}${stopcolor}"
 	fi
 
 	if [ ${#1} -lt $sizefortext ];then
 
 		local sizeitem=${#item}
 		for ((i=0;i<$(( sizefortext - sizeitem )); i++ ));do
-			item+="-"
+			item+="${emptyitemcolor}~${stopcolor}"
 		done
 
 	fi
 
-	echo -en "┃"
+	echo -en "${leftbarcolor}┃${stopcolor}"
 	echo -en "$item"
-	echo -e "┃"
+	echo -e "${rightbarcolor}┃${stopcolor}"
 }
 
 #prints the whole menu section
@@ -142,16 +166,17 @@ function printmenu(){
 	curritems=()
 	
 
-	if [ $availableslots -lt ${#itemtable[@]} ];then
+	if [ $availableslots -lt $(( ${#itemtable[@]} - itemoffset )) ];then
 		for (( i=0; i<availableslots; i++ ));do
-			curritems+=("${itemtable[${i}]}")	
+			curritems+=("${itemtable[ $(( i + itemoffset )) ]}")	
 			availableslots=0
 		done		
 	else
-		for item in "${itemtable[@]}";do
+		#for item in "${itemtable[@]}";do
+		for (( i=itemoffset ; i<${#itemtable[@]}; i++ ));do
 			#echo "ici2" ${#itemtable[@]} ">" $availableslots
 			availableslots=$(( availableslots -	1 ))
-			curritems+=("$item")
+			curritems+=("${itemtable[i]}")
 		done
 	fi
 
@@ -162,7 +187,7 @@ function printmenu(){
 	done	
 
 	for i in $(seq 0 $availableslots);do
-		printitem "-"
+		printitem "~"
 	done
 
 }
@@ -204,37 +229,58 @@ function inputupdate(){
 function inputupdatehelper(){
 
 	local prompt=$1	
-	 
-	 	if [[ "${prompt:6:2}" == '65' ]];then
-	
-			scrollup=1
-	
-	 	elif [[ "${prompt:6:2}" == '64' ]];then
-	 	
-	 		scrolldown=1
-	
-	 	elif [[ "${prompt:6:2}" == '0;' ]];then
-	 	 	
-					#get coordinate section
-	 	 			local numbers="${prompt:7:9}" 
-	 	 			#clean the end
-	 	 			local numbers=${numbers%%[Mm]*}
-	 	 			#clean the start
-	 	 			local coords=${numbers#;}
-					#there you go, some fresh coords, frsh out of the ainsi oven
+ 
+ 	if [ "${prompt:6:2}" == '65' ] && [ $scrollup -ne 1 ];then
 
-					clickx=${coords%;*}
-					clicky=${coords#*;}
+		scrollup=1
+
+ 	elif [ "${prompt:6:2}" == '64' ] && [ $scrollup -ne 1 ];then
+ 	
+ 		scrolldown=1
+
+ 	elif [[ "${prompt:6:2}" == '0;' ]];then
+ 	 	
+				#get coordinate section
+ 	 			local numbers="${prompt:7:9}" 
+ 	 			#clean the end
+ 	 			local numbers=${numbers%%[Mm]*}
+ 	 			#clean the start
+ 	 			local coords=${numbers#;}
+				#there you go, some fresh coords, frsh out of the ainsi oven
+
+				clickx=${coords%;*}
+				clicky=${coords#*;}
 
 
-		else
-	
-			scrollup=0
-			scrolldown=0
-	 	 			
-	 	fi
-	
+	else
+
+		scrolldown=0
+		scrollup=0
+
+	fi
+
 }
+
+function updatescroll(){
+
+	if [ $scrolldown -eq 1 ];then
+		itemoffset=$((itemoffset - 1 ))
+
+	elif [ $scrollup -eq 1 ];then
+		itemoffset=$((itemoffset + 1 ))
+
+	fi
+
+	if [ $itemoffset -ge ${#itemtable[@]} ];then
+		itemoffset=$((${#itemtable[@]} - 1))
+	fi 
+
+	if [ $itemoffset -lt 0 ];then
+		itemoffset=0
+	fi
+}
+
+
 
 
 
@@ -250,17 +296,21 @@ while true;do
 	gettermsize
 	getusabletextarea
 	inputupdate
+	updatescroll
 
 	#prints menu
 	printtopline
 	printmenu
 	printbottomline
 
+	scrolldown=0
+	scrollup=0
+
 	if [ "$clickx" -eq 1 ] && [ "$clicky" -eq 1 ];then
 		echo -en '\e[?1006l'  # disable SGR extended mode
 		echo -en '\e[?1000l'  # disable basic mouse tracking
-		#clear
-		#reset
+		clear
+		reset
 		break
 	fi
 
