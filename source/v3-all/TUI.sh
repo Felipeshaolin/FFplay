@@ -286,6 +286,7 @@ function updatescroll(){
 
 itemtable=("smells like teen spirit" "come as you are" "buddy holly" "lon poka mi" "7/8" "jojo op 3")
 echo -en "\e[?25l"
+stty -echo
 
 #test
 while true;do
@@ -309,6 +310,7 @@ while true;do
 	if [ "$clickx" -eq 1 ] && [ "$clicky" -eq 1 ];then
 		echo -en '\e[?1006l'  # disable SGR extended mode
 		echo -en '\e[?1000l'  # disable basic mouse tracking
+		stty echo
 		clear
 		reset
 		break
