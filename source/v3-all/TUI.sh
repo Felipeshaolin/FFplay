@@ -266,6 +266,9 @@ function inputupdate(){
 	    inputupdatehelper "$k" # run helper
 
 	fi
+
+	#read additional trash data
+	read -rs -t 0.01
 	
 } # helper for inputupdate function
 function inputupdatehelper(){
@@ -332,7 +335,7 @@ function updatescroll(){
 }
 
 
-itemtable=("smells like teen spirit" "come as you are" "buddy holly" "lon poka mi" "7/8" "jojo op 3") # TODO: remove this, this is test material
+itemtable=("smells like teen spirit" "come as you are" "buddy holly" "lon poka mi" "7/8" "jojo op 3" "jan pi tomo suli li wile moku. ona li lukin e waso lon sewi. waso li toki: sina wile moku anu seme? jan li toki: mi wile moku. waso li awen, li pana e kili. jan li pilin pona.") # TODO: remove this, this is test material
 echo -en "\e[?25l" # clear screen
 stty -echo # make input invisible
 
@@ -369,7 +372,7 @@ while true;do
 		break # end program execution
 	fi
 
-	#jan pi tomo suli li wile moku. ona li lukin e waso lon sewi. waso li toki: 'sina wile moku anu seme?' jan li toki: 'mi wile moku.' waso li awen, li pana e kili. jan li pona."
+	#jan pi tomo suli li wile moku. ona li lukin e waso lon sewi. waso li toki: 'sina wile moku anu seme?' jan li toki: 'mi wile moku.' waso li awen, li pana e kili. jan li pilin pona."
 	
 done
 
