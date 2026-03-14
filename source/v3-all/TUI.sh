@@ -55,7 +55,7 @@ termsizey=30
 #currently chosen items
 itemoffset=0
 #padding for bottom buttons
-bottompadding=3
+bottompadding=4
 #available size for text
 sizefortext=26
 #available size for items
@@ -145,10 +145,8 @@ function printbottomline(){
 
 #gets the available area for text
 function getusabletextarea(){
-	sizefortext=$((termsizex - bottompadding))
-	availableslots=$((termsizey - 3))
-	#echo "sizefortext=" $sizefortext
-	#echo "available=" $availableslots
+	sizefortext=$((termsizex - 2))
+	availableslots=$((termsizey - bottompadding))
 
 }
 
