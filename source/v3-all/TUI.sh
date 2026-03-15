@@ -33,11 +33,29 @@ selecteditemcolor=$whiteblackbackground
 itemcolor=$white
 emptyitemcolor=$black
 
-###fucntion pid's
-pids=()
+#buttons
+buttoncolor=$white
+buttonbordercolor=$white
+
+playcolor=$green
+playbordercolor=$green
+
+shufflecolor=$violet
+shufflebordercolor=$violet
+
+quitcolor=$red
+quitbordercolor=$red
 
 ###input
 
+#quit,play,shouffle buttons
+buttonclicked=0 #general button clickes
+playbuttonclicked=0
+shufflebuttonclicked=0
+quitbuttonclicked=0
+
+
+#mouse wheel
 scrollup=0
 scrolldown=0
 #mouse coordinates
@@ -46,20 +64,32 @@ clicky=0
 
 ###terminal
 
+out='/dev/tty' #for outputing truh cerr not cout
+in='/dev/tty' #for inputing truh cerr not cout
+
 #ṭerminal size
 termsizex=30
 termsizey=30
 
 ###menu
 
+#labels for the buttons (one character long)
+playlabel="▶"
+shufflelabel="⇄"
+quitlabel="x"
+
+#numbers of buttons (can be changed if you want to add addtional buttons)
+numberofbuttons=3
+#size of interior of buttons
+buttonsize=0
 #currently chosen items
 itemoffset=0
 #padding for bottom buttons
-bottompadding=4
+bottompadding=10
 #available size for text
 sizefortext=26
 #available size for items
-availableslots=3
+availableslots=10
 #top line of TUI
 topline="╭──────────FFplay──────────╮"
 #bottom line of TUI
@@ -73,14 +103,6 @@ declare -a curritems;
 # functions #
 #############
 
-###main
-function main_tui(){
-	while true;do
-		::
-	done
-}
-
-
 ###helper 
 
 #updates the terminal size variables
@@ -93,7 +115,7 @@ function gettermsize(){
 	#check if minimum requirements are met
 	if [[ $termsizex -le 8 && $termsizey -le 4 ]];then
 		#your term is too small
-		echo "${red}terminal size too small${stopcolor}"
+		echo "${red}terminal size too small${stopcolor}" '$out'
 		sleep 4
 	fi	
 }
@@ -122,7 +144,7 @@ function printtopline(){
 	topline+="╮${stopcolor}"
 
 	#display
-	echo -e "$topline"
+	echo -e "$topline" > "$out"
 }
 
 #creates the top line
@@ -140,17 +162,18 @@ function printbottomline(){
 	bottomline+="╯${stopcolor}"
 	
 	#display
-	echo -en "$bottomline"
+	echo -en "$bottomline" > "$out"
 }
 
 #gets the available area for text
 function getusabletextarea(){
 	sizefortext=$((termsizex - 2))
 	availableslots=$((termsizey - bottompadding))
-
 }
 
 #prints an item to the menu
+# takes a string as argument
+# takes a color as second argument
 function printitem(){
 
 	# if there arent any available slots...
@@ -161,11 +184,12 @@ function printitem(){
 	
 	# the current item string
 	local item="$1"
+	local color="$2"
 
 	# if the size of the string is too big...
 	if [ ${#1} -gt $sizefortext ];then
 		# clip it to size
-		item="${itemcolor}${item:0:${sizefortext}}${stopcolor}"
+		item="${item:0:${sizefortext}}${stopcolor}"
 	fi
 
 	# if the string is too small...
@@ -174,17 +198,16 @@ function printitem(){
 		# we add characters to it
 		local sizeitem=${#item}
 		for ((i=0;i<$(( sizefortext - sizeitem )); i++ ));do
-			item+="${emptyitemcolor}~${stopcolor}"
+			item+="${stopcolor}${emptyitemcolor}~${stopcolor}"
 		done
-
 	fi
 
 	#display leftbar
-	echo -en "${leftbarcolor}┃${stopcolor}"
+	echo -en "${leftbarcolor}┃${stopcolor}" > "$out"
 	#display item
-	echo -en "$item"
+	echo -en "${color}$item" > "$out"
 	#display rightbar
-	echo -e "${rightbarcolor}┃${stopcolor}"
+	echo -en "${rightbarcolor}┃${stopcolor}\n" > "$out"
 }
 
 #prints the whole menu section
@@ -214,14 +237,130 @@ function printmenu(){
 	fi
 
 	#display list of items
-	for item in "${curritems[@]}";do
-		printitem "$item"
+	for i in $(seq 0 ${#curritems[@]}); do
+		local var
+		var=${curritems[i]}
+
+		if [ "$i" -eq 0 ];then
+			printitem "$var" "$whiteblackbackground"
+		else
+    		printitem "$var" "$itemcolor"
+		fi
 	done	
 
 	#display empty spaces if needed
 	for i in $(seq 0 $availableslots);do
-		printitem "~"
+		printitem "" "$black"
 	done
+
+}
+
+#prinsts the top of the buttons
+function printtopbuttons(){
+
+	local middlepoint=$(( termsizex  / numberofbuttons )) 
+
+	#echo "$middlepoint"="$termsizex""/""$numberofbuttons"
+
+	#play button
+	local topbutton="${playbordercolor}╔"
+	for i in $(seq 0 $((middlepoint - 3)) );do
+		topbutton+="═"
+	done
+	topbutton+="╗${stopcolor}"
+
+	#shuffle button
+	topbutton+="${shufflebordercolor}╔"
+	for i in $(seq 0 $((middlepoint - 3)) );do
+		topbutton+="═"
+	done
+	topbutton+="╗${stopcolor}"
+
+	#quit button
+	topbutton+="${quitbordercolor}╔"
+	for i in $(seq 0 $((middlepoint - 3)) );do
+		topbutton+="═"
+	done
+	topbutton+="╗${stopcolor}\n"
+
+	echo -ne "$topbutton" > "$out"
+
+}
+
+#prints the actual buttons decorations
+function printbuttons(){
+
+	local middlepoint=$(( termsizex  / numberofbuttons )) 
+
+	#play button
+	local button+="${playcolor}║"
+	for i2 in $(seq 0 $((middlepoint - 3)) );do
+		#print label
+		if [ "$i2" -eq $(((middlepoint - 3)/2)) ];then
+			button+="$playlabel"
+		else
+			button="${button} "
+		fi
+	done
+	button+="║${stopcolor}"
+
+	#shuffle button
+	button+="${shufflecolor}║"
+	for i2 in $(seq 0 $((middlepoint - 3)) );do
+
+		#print label
+		if [ "$i2" -eq $(((middlepoint - 3)/2)) ];then
+			button+="$shufflelabel"
+		else
+			button="${button} "
+		fi
+	done
+	button+="║${stopcolor}"
+
+	#quit button
+	button+="${quitcolor}║"
+	for i2 in $(seq 0 $((middlepoint - 3)) );do
+		#print label
+		if [ "$i2" -eq $(((middlepoint - 3)/2)) ];then
+			button+="$quitlabel"
+		else
+			button="${button} "
+		fi
+	done
+	button+="║${stopcolor}\n"
+
+	echo -ne "$button" > "$out"
+}
+
+#prints the bottom of the buttons
+function printbottombuttons(){
+
+	local middlepoint=$(( termsizex  / numberofbuttons )) 
+
+	#echo "$middlepoint"="$termsizex""/""$numberofbuttons"
+
+	#play button
+	local bottombutton="${playbordercolor}╚"
+	for i in $(seq 0 $((middlepoint - 3)) );do
+		bottombutton+="═"
+	done
+	bottombutton+="╝${stopcolor}"
+
+	#shuffle button
+	bottombutton+="${shufflebordercolor}╚"
+	for i in $(seq 0 $((middlepoint - 3)) );do
+		bottombutton+="═"
+	done
+	bottombutton+="╝${stopcolor}"
+
+	#quit button
+	bottombutton+="${quitbordercolor}╚"
+	for i in $(seq 0 $((middlepoint - 3)) );do
+		bottombutton+="═"
+	done
+	bottombutton+="╝${stopcolor}"
+
+	echo -ne "$bottombutton" > "$out"
 
 }
 
@@ -246,8 +385,8 @@ function printmenu(){
 # and scrolls
 function inputupdate(){
 
-	(echo -en '\e[?1000h')  # basic mouse tracking
-	(echo -en '\e[?1006h')  # enable SGR extended mode (easier coordinates)
+	echo -en '\e[?1000h' > "$out"  # basic mouse tracking
+	echo -en '\e[?1006h' > "$out"  # enable SGR extended mode (easier coordinates)
 
 	IFS= read -rsn1 -t 0.01 first  # read first byte
 
@@ -332,45 +471,89 @@ function updatescroll(){
 	fi
 }
 
+function checkbuttons(){
 
-itemtable=("smells like teen spirit" "come as you are" "buddy holly" "lon poka mi" "7/8" "jojo op 3" "jan pi tomo suli li wile moku. ona li lukin e waso lon sewi. waso li toki: sina wile moku anu seme? jan li toki: mi wile moku. waso li awen, li pana e kili. jan li pilin pona.") # TODO: remove this, this is test material
-echo -en "\e[?25l" # clear screen
-stty -echo # make input invisible
-
-#test
-while true;do
-
-	#clears screen and puts cursor at 1,1
-	tput home
-
-	#update values
-
-	gettermsize # updates term sizes
-	getusabletextarea # gets necessary area
-	inputupdate # gets input
-	updatescroll # treats input
-
-	#prints menu
-	printtopline
-	printmenu
-	printbottomline
-
-	# needed for error correction
-	# FIXME:
-	scrolldown=0
-	scrollup=0
-
-	# if the uses clicks at 1,1 (little red X )...
-	if [ "$clickx" -eq 1 ] && [ "$clicky" -eq 1 ];then
-		echo -en '\e[?1006l'  # disable SGR extended mode
-		echo -en '\e[?1000l'  # disable basic mouse tracking
-		stty echo # make input visible
-		clear # clear terminal
-		reset # reset just in case
-		break # end program execution
+	#exit
+	if [ "$clickx" -eq 1 ] && [ "$clicky" -eq 1 ];then # up-left red button
+		closegracifully 1
 	fi
 
-	#jan pi tomo suli li wile moku. ona li lukin e waso lon sewi. waso li toki: 'sina wile moku anu seme?' jan li toki: 'mi wile moku.' waso li awen, li pana e kili. jan li pilin pona."
-	
-done
+	#shuffle
+	if [ "$clickx" -gt $(( termsizex  / numberofbuttons )) ] && [ "$clickx" -lt $(( termsizex * 2 / numberofbuttons )) ] && [ "$clicky" -gt "$availableslots" ];then
+		closegracifully 3
+	fi
 
+	#play
+	if [ "$clickx" -lt $(( termsizex  / numberofbuttons )) ] && [ "$clicky" -gt "$availableslots" ];then
+		closegracifully 2
+	fi
+
+	if [ "$clickx" -gt $(( termsizex * 2 / numberofbuttons )) ] && [ "$clicky" -gt "$availableslots" ];then 
+		closegracifully 1
+	fi
+
+}
+
+function closegracifully(){
+
+	echo -en '\e[?1006l' > "$out"   # disable SGR extended mode
+	echo -en '\e[?1000l' > "$out"  # disable basic mouse tracking
+	stty echo > "$out" # make input visible
+	clear > "$out" # clear terminal
+	reset < "$in" > "$out" # reset just in case
+	echo "output=""$itemoffset"  > "$out"
+	exit "$1" # close
+
+}
+
+
+
+###main
+
+#main function, takes in the strings to display
+function main_tui(){
+
+	itemtable=()
+	
+	for i in $( seq 1 $# );do
+		itemtable+=("${!i}")
+	done
+	
+	echo -en "\e[?25l" > "$out" # clear screen
+	stty -echo > "$out" # make input invisible
+
+	#test
+	while true;do
+
+		#clears screen and puts cursor at 1,1
+		tput home > "$out"
+
+		#update values
+
+		gettermsize # updates term sizes
+		getusabletextarea # gets necessary area
+		inputupdate # gets input
+		updatescroll # treats input
+
+		#prints menu
+		printtopline
+		printmenu
+		printbottomline
+
+		#prints buttons
+		printtopbuttons
+		printbuttons
+		printbottombuttons
+
+		# needed for error correction
+		# FIXME:
+		scrolldown=0
+		scrollup=0
+
+		checkbuttons
+
+		#jan pi tomo suli li wile moku. ona li lukin e waso lon sewi. waso li toki: 'sina wile moku anu seme?' jan li toki: 'mi wile moku.' waso li awen, li pana e kili. jan li pilin pona."
+		
+	done
+
+}

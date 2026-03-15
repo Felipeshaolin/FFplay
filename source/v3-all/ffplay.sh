@@ -8,6 +8,9 @@
 # written by FELSNER Felipe in 2026
 # kijetesantakalu li jan lawa
 
+# shellcheck disable=SC1091
+source ./TUI.sh
+
 #version of script
 VERSION=2
 
@@ -119,25 +122,22 @@ FILE_COUNT=${#TEMP_FILE_LIST[@]}
 
 #format the data in a more useble state
 FILE_LIST=()
-for i in "${!TEMP_FILE_LIST[@]}"; do
-	# FILE_LIST+=("$i" "${TEMP_FILE_LIST[$i]##*/}" )
-	FILE_LIST+=("$i" "${TEMP_FILE_LIST[$i]}" )
-
-done
+#for i in "${!TEMP_FILE_LIST[@]}"; do
+#	# FILE_LIST+=("$i" "${TEMP_FILE_LIST[$i]##*/}" )
+#	FILE_LIST+=("$i" "${TEMP_FILE_LIST[$i]}" )
+#
+#done
 
 
 #main loop
 
 DIALOG_RET=0 # the return value of dialog
 
-while [ 1 -eq 1 ]; do
-
+while true; do
 
 	#temporary list for removing file extention
 	#and full path
-	TEMP_FILE_LIST=()
 	
-	index=0
 	for i in "${!FILE_LIST[@]}"; do
 
 		TEMP_FILE_LIST+=("${FILE_LIST[$i]##*/}")
@@ -150,18 +150,12 @@ while [ 1 -eq 1 ]; do
 # 			TEMP_FILE_LIST+="${FILE_LIST[$i]}"
 # 		fi
 
-	#good old dialog box
-	#god how i hate dialog
-	FILE_INDEX=$(dialog \
-		--ok-label "Play" \
-		--cancel-label "Quit" \
-		--extra-button \
-		--extra-label "shuffle" \
-		--menu "Pick a file:" 20 70 10 \
-		"${TEMP_FILE_LIST[@]}" \
-		3>&1 1>&2 2>&3) 
+	FILE_INDEX=$(main_tui "${TEMP_FILE_LIST[@]}" </dev/tty )
 
 	DIALOG_RET=$?
+	
+	FILE_INDEX=${FILE_INDEX##*output=}
+
 	
 	#the cancel button
 	if [ $DIALOG_RET -eq 1 ];then
@@ -180,7 +174,7 @@ while [ 1 -eq 1 ]; do
 	#suffle feature
 	if [ $DIALOG_RET -eq 3 ]; then
 
-		rng 0 $FILE_COUNT
+		rng 0 "$FILE_COUNT"
 
 		#rng
 		FILE_INDEX=$RANDOM_VAR
@@ -206,7 +200,7 @@ done
 reset # resets the terminal, otherwise errors may accour
 
 if [ -d "$TEMP" ];then
-	rm -r "$TEMP""/"
+	rm -r "${TEMP:?}""/"
 fi
 
 #remove temp dialog config file
