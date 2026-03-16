@@ -7,7 +7,7 @@
 ############
 
 ###colors
-#modify as you wish
+#modify as you wish (;
 
 #default color values
 red="\e[31m"
@@ -176,12 +176,6 @@ function getusabletextarea(){
 # takes a color as second argument
 function printitem(){
 
-	# if there arent any available slots...
-	if [ $availableslots -le 0 ];then
-		exit 0
-		#do nothing
-	fi
-	
 	# the current item string
 	local item="$1"
 	local color="$2"
@@ -216,15 +210,13 @@ function printmenu(){
 	curritems=() # list of items that will be siplayed
 
 	# if there are too many items to display...
-	if [ $availableslots -lt $(( ${#itemtable[@]} - itemoffset )) ];then
+	if [ "$availableslots" -lt $(( ${#itemtable[@]} - itemoffset )) ]; then
 
-		for (( i=0; i<availableslots; i++ ));do
-			#add only items from the offset onwards till the size of availables slots
-			curritems+=("${itemtable[ $(( i + itemoffset )) ]}")	
-			availableslots=0
+		for (( i=itemoffset; i<$((availableslots + itemoffset)); i++ )); do
+        	curritems+=("${itemtable[i]}")
+    	done
+	    availableslots=0   # mark that all slots are used
 
-		done		
-	
 	else # the number of lines is suffcient
 		
 		# add all items from index onward
@@ -246,6 +238,7 @@ function printmenu(){
 		else
     		printitem "$var" "$itemcolor"
 		fi
+
 	done	
 
 	#display empty spaces if needed
