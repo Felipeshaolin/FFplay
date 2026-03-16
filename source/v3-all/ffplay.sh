@@ -150,7 +150,7 @@ while true; do
 # 			TEMP_FILE_LIST+="${FILE_LIST[$i]}"
 # 		fi
 
-	FILE_INDEX=$(main_tui "${TEMP_FILE_LIST[@]}" </dev/tty )
+	FILE_INDEX=$(main_tui "${FILE_LIST[@]}" </dev/tty )
 
 	DIALOG_RET=$?
 
@@ -181,15 +181,19 @@ while true; do
 
 		#playback
 		clear
-		mpv "${FILE_LIST[$(( $FILE_INDEX * 2 + 1 ))]}" >/dev/null 2>&1 &
+		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" &
+		#>/dev/null 2>&1
 		bg_pid=$!
+		sleep 2
 		
 	else
 	
 		#normal playback
 		clear
-		mpv "${FILE_LIST[$(( FILE_INDEX * 2 + 1 ))]}" >/dev/null 2>&1 &
+		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" &
+		#>/dev/null 2>&1
 		bg_pid=$!
+		sleep 2
 
 	fi
 
