@@ -153,7 +153,7 @@ while true; do
 	FILE_INDEX=$(main_tui "${TEMP_FILE_LIST[@]}" </dev/tty )
 
 	DIALOG_RET=$?
-	
+
 	FILE_INDEX=${FILE_INDEX##*output=}
 
 	

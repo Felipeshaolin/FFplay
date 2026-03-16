@@ -494,7 +494,7 @@ function closegracifully(){
 	stty echo > "$out" # make input visible
 	clear > "$out" # clear terminal
 	reset < "$in" > "$out" # reset just in case
-	echo "output=""$itemoffset"  > "$out"
+	echo "output=""$itemoffset" 
 	exit "$1" # close
 
 }
