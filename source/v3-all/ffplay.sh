@@ -94,7 +94,7 @@ fi
 #get the home directory for the music files
 if [ $# -eq 0 ]; then
 
-	mapfile -t TEMP_FILE_LIST < <(find -maxdepth 1 -type f)
+	mapfile -t TEMP_FILE_LIST < <(find . -maxdepth 1 -type f )
 
 else
 
@@ -150,7 +150,7 @@ while true; do
 # 			TEMP_FILE_LIST+="${FILE_LIST[$i]}"
 # 		fi
 
-	FILE_INDEX=$(main_tui "${FILE_LIST[@]}" </dev/tty )
+	FILE_INDEX=$(main_tui "${TEMP_FILE_LIST[@]}" </dev/tty )
 
 	DIALOG_RET=$?
 
@@ -181,19 +181,16 @@ while true; do
 
 		#playback
 		clear
-		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" &
-		#>/dev/null 2>&1
+		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" >/dev/null 2>&1 &
 		bg_pid=$!
-		sleep 2
 		
 	else
 	
 		#normal playback
 		clear
-		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" &
-		#>/dev/null 2>&1
+		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" >/dev/null 2>&1 &
+		#
 		bg_pid=$!
-		sleep 2
 
 	fi
 
