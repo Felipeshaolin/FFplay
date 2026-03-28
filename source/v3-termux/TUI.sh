@@ -194,18 +194,18 @@ function printitem(){
 
 	# the current item string
 	local item="$1"
-	item=${item:0:$(( sizefortext - 2))} #FIXME: this should be temporary, big strings are a common bug.
+	item=${item:0:$sizefortext} #FIXME: this should be temporary, big strings are a common bug.
 
 	local color="$2"
 
 	# if the size of the string is too big...
-	if [ ${#1} -gt $sizefortext ];then # the -3 is a margin of error (much needed for bash)
+	if [ ${#1} -gt $((sizefortext-3)) ];then
 		# clip it to size
 		item="${item:0:${sizefortext}}${stopcolor}"
 	fi
 
 	# if the string is too small...
-	if [ ${#1} -lt $sizefortext ];then
+	if [ ${#1} -lt $((sizefortext-3)) ];then
 
 		# we add characters to it
 		local sizeitem=${#item}
@@ -399,7 +399,7 @@ function inputupdate(){
 	echo -en '\e[?1000h' > "$out"  # basic mouse tracking
 	echo -en '\e[?1006h' > "$out"  # enable SGR extended mode (easier coordinates)
 
-	IFS= read -rsn1 -t 0.01 first  # read first byte
+	IFS= read -rn1 -t 0.01 first  # read first byte
 
 	# if its a code...
 	if [[ $first == $'\e' ]]; then
@@ -415,6 +415,8 @@ function inputupdate(){
 
 	fi 
 
+	
+
 	#read additional trash data
 	read -rs -t 0.01
 	
@@ -428,8 +430,18 @@ function inputupdatehelper(){
 
 		scrollup=1
 
+	#button up
+	elif [ "${prompt:5:1}" == 'B' ] && [ $scrollup -ne 1 ];then
+
+		scrollup=1
+
 	#scroll down
  	elif [ "${prompt:6:2}" == '64' ] && [ $scrollup -ne 1 ];then
+ 	
+ 		scrolldown=1
+
+	#button down
+ 	elif [ "${prompt:5:1}" == 'A' ] && [ $scrollup -ne 1 ];then
  	
  		scrolldown=1
 

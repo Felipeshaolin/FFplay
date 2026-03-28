@@ -134,6 +134,7 @@ FILE_LIST=()
 #main loop
 
 DIALOG_RET=0 # the return value of dialog
+IS_PLAYING=0 # bool for determining if the player is playing or not.
 
 while true; do
 
@@ -145,19 +146,13 @@ while true; do
 		TEMP_FILE_LIST+=("${FILE_LIST[$i]##*/}")
 		
 	done
-# 
-# 		if [ $(($i % 2)) -eq 0 ]; then
-# 			TEMP_FILE_LIST+="${FILE_LIST[$i]##*/}"
-# 		else
-# 			TEMP_FILE_LIST+="${FILE_LIST[$i]}"
-# 		fi
+
+	IS_PLAYING=$(kill -0 $bg_pid)
 
 	FILE_INDEX=$(main_tui "$LAST_SONG" "$DIALOG_RET" "${TEMP_FILE_LIST[@]}" </dev/tty )
 
 	DIALOG_RET=$?
 
-	echo $DIALOG_RET
-	sleep 2
 
 	FILE_INDEX=${FILE_INDEX##*output=}
 	LAST_SONG=$FILE_INDEX
@@ -169,7 +164,7 @@ while true; do
 	fi
 
 	#auto shuffle
-	if [ $DIALOG_RET -eq 30 ] && [[ -n "$bg_pid" ]] && ! kill -0 "$bg_pid" 2>/dev/null;then 
+	if [ $DIALOG_RET -eq 30 ] && [ "$IS_PLAYING" -ne 1 ];then 
 
 		rng 0 "$FILE_COUNT"
 
@@ -180,10 +175,10 @@ while true; do
 		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" >/dev/null 2>&1 &
 		bg_pid=$!
 
-	fi
+	
 
 	#auto play
-	if [ $DIALOG_RET -eq 20 ] && [[ -n "$bg_pid" ]] && ! kill -0 "$bg_pid" 2>/dev/null;then 
+	elif [ $DIALOG_RET -eq 20 ] && [ "$IS_PLAYING" -ne 1 ];then 
 
 		#normal playback
 		echo "play"
@@ -192,10 +187,12 @@ while true; do
 		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" >/dev/null 2>&1 &
 		bg_pid=$!
 
-	fi
+	
 
 	#suffle feature
-	if [ $DIALOG_RET -eq 3 ]; then
+	elif [ $DIALOG_RET -eq 3 ]; then
+
+		pkill mpv
 
 		rng 0 "$FILE_COUNT"
 
@@ -208,6 +205,8 @@ while true; do
 		
 	else
 	
+		pkill mpv
+
 		#normal playback
 		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" >/dev/null 2>&1 &
 		bg_pid=$!
