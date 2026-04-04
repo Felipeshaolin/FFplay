@@ -87,7 +87,7 @@ itemoffset=0
 #passed as parameter of TUI
 lastitemoffset=1
 #padding for bottom buttons
-bottompadding=10
+bottompadding=11
 #available size for text
 sizefortext=26
 #available size for items
@@ -190,37 +190,25 @@ function getusabletextarea(){
 #prints an item to the menu
 # takes a string as argument
 # takes a color as second argument
-function printitem(){
-
-	# the current item string
+function printitem() {
 	local item="$1"
-	item=${item:0:$sizefortext} #FIXME: this should be temporary, big strings are a common bug.
-
 	local color="$2"
 
-	# if the size of the string is too big...
-	if [ ${#1} -gt $((sizefortext-3)) ];then
-		# clip it to size
-		item="${item:0:${sizefortext}}${stopcolor}"
+	# truncate once
+	item=${item:0:sizefortext}
+
+	# pad if needed
+	local sizeitem=${#item}
+	if [ "$sizeitem" -lt "$sizefortext" ]; then
+		for ((i=0; i < sizefortext - sizeitem; i++)); do
+	    	item+="~"
+	    done
 	fi
 
-	# if the string is too small...
-	if [ ${#1} -lt $((sizefortext-3)) ];then
-
-		# we add characters to it
-		local sizeitem=${#item}
-		for ((i=0;i<$(( sizefortext - sizeitem )); i++ ));do
-			item+="${stopcolor}${emptyitemcolor}~${stopcolor}"
-		done
-	fi
-
-	#display leftbar
-	echo -en "${leftbarcolor}┃${stopcolor}" > "$out"
-	#display item
-	echo -en "${color}$item" > "$out"
-	#display rightbar
-	echo -en "${rightbarcolor}┃${stopcolor}\n" > "$out"
+	# print everything at once
+	echo -en "${leftbarcolor}┃${stopcolor}${color}${item}${rightbarcolor}┃${stopcolor}\n" >> "$out"
 }
+
 
 #prints the whole menu section
 function printmenu(){

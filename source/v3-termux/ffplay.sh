@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+
 
 # ffplay is a simple bash script music player
 
@@ -7,9 +7,6 @@
 
 # written by FELSNER Felipe in 2026
 # kijetesantakalu li jan lawa
-
-# shellcheck disable=SC1091
-source ./TUI.sh
 
 #version of script
 VERSION=3
