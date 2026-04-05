@@ -137,6 +137,12 @@ while true; do
 
 	#temporary list for removing file extention
 	#and full path
+
+	if pgrep -x mpv > /dev/null; then
+		IS_PLAYING=1
+	else
+	    IS_PLAYING=0
+	fi
 	
 	for i in "${!FILE_LIST[@]}"; do
 
@@ -144,12 +150,13 @@ while true; do
 		
 	done
 
-	IS_PLAYING=$(kill -0 $bg_pid)
-
 	FILE_INDEX=$(main_tui "$LAST_SONG" "$DIALOG_RET" "${TEMP_FILE_LIST[@]}" </dev/tty )
 
 	DIALOG_RET=$?
 
+	echo $DIALOG_RET
+	echo $IS_PLAYING
+	sleep 2
 
 	FILE_INDEX=${FILE_INDEX##*output=}
 	LAST_SONG=$FILE_INDEX
@@ -171,11 +178,10 @@ while true; do
 		#playback
 		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" >/dev/null 2>&1 &
 		bg_pid=$!
-
 	
 
 	#auto play
-	elif [ $DIALOG_RET -eq 20 ] && [ "$IS_PLAYING" -ne 1 ];then 
+	elif [ $DIALOG_RET -eq 20 ] && [ "$IS_PLAYING" -eq 0 ];then 
 
 		#normal playback
 		echo "play"
@@ -183,7 +189,6 @@ while true; do
 		sleep 3
 		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" >/dev/null 2>&1 &
 		bg_pid=$!
-
 	
 
 	#suffle feature
@@ -199,8 +204,8 @@ while true; do
 		#playback
 		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" >/dev/null 2>&1 &
 		bg_pid=$!
-		
-	else
+
+	elif [ $DIALOG_RET -eq 2 ]; then
 	
 		pkill mpv
 
