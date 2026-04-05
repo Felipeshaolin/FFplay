@@ -87,7 +87,7 @@ itemoffset=0
 #passed as parameter of TUI
 lastitemoffset=1
 #padding for bottom buttons
-bottompadding=11
+bottompadding=8
 #available size for text
 sizefortext=26
 #available size for items
@@ -193,15 +193,15 @@ function getusabletextarea(){
 function printitem() {
 	local item="$1"
 	local color="$2"
-
+	
 	# truncate once
-	item=${item:0:sizefortext}
+	item=${item:0:$sizefortext}
 
 	# pad if needed
 	local sizeitem=${#item}
 	if [ "$sizeitem" -lt "$sizefortext" ]; then
 		for ((i=0; i < sizefortext - sizeitem; i++)); do
-	    	item+="~"
+	    	item+="$emptyitemcolor""~""$stopcolor"
 	    done
 	fi
 
@@ -228,7 +228,7 @@ function printmenu(){
 		# add all items from index onward
 		for (( i=itemoffset ; i<${#itemtable[@]}; i++ ));do
 			#add all items to the list
-			availableslots=$(( availableslots -	1 ))
+			availableslots=$availableslots
 			curritems+=("${itemtable[i]}")
 
 		done

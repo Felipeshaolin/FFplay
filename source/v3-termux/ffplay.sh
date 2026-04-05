@@ -118,20 +118,21 @@ fi
 #a number of the files that are available, used by shuffle
 FILE_COUNT=${#TEMP_FILE_LIST[@]} 
 
-
-#format the data in a more useble state
-FILE_LIST=()
-#for i in "${!TEMP_FILE_LIST[@]}"; do
-#	# FILE_LIST+=("$i" "${TEMP_FILE_LIST[$i]##*/}" )
-#	FILE_LIST+=("$i" "${TEMP_FILE_LIST[$i]}" )
-#
-#done
-
-
 #main loop
 
 DIALOG_RET=0 # the return value of dialog
 IS_PLAYING=0 # bool for determining if the player is playing or not.
+
+
+# add filepaths to list and remove any non-ascii code
+for ((i=0;i<$FILE_COUNT;i++)); do
+
+	TEMP="${TEMP_FILE_LIST[$i]##*/}"
+	cleaned=$(printf '%s' "$TEMP" | LC_ALL=C tr -c '\0-\177' '#')
+    TEMP_FILE_LIST[$i]="$cleaned"
+    
+done
+
 
 while true; do
 
@@ -144,19 +145,9 @@ while true; do
 	    IS_PLAYING=0
 	fi
 	
-	for i in "${!FILE_LIST[@]}"; do
-
-		TEMP_FILE_LIST+=("${FILE_LIST[$i]##*/}")
-		
-	done
-
 	FILE_INDEX=$(main_tui "$LAST_SONG" "$DIALOG_RET" "${TEMP_FILE_LIST[@]}" </dev/tty )
 
 	DIALOG_RET=$?
-
-	echo $DIALOG_RET
-	echo $IS_PLAYING
-	sleep 2
 
 	FILE_INDEX=${FILE_INDEX##*output=}
 	LAST_SONG=$FILE_INDEX
@@ -184,9 +175,6 @@ while true; do
 	elif [ $DIALOG_RET -eq 20 ] && [ "$IS_PLAYING" -eq 0 ];then 
 
 		#normal playback
-		echo "play"
-		echo "${TEMP_FILE_LIST[$FILE_INDEX]}"
-		sleep 3
 		mpv "${TEMP_FILE_LIST[$FILE_INDEX]}" >/dev/null 2>&1 &
 		bg_pid=$!
 	
